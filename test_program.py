@@ -33,9 +33,21 @@ rightprimer = "TAGTGAGTGCGATTAAGCGTGTT" # for direct right appending (no revcomp
 
 # this test generates substitution, deletion, and insertion errors
 # sub,del,ins rates to simulate (as multiple of our observed values):
-(srate,drate,irate) = 1.5 * array([0.0238, 0.0082, 0.0039])
 
-# set parameters for DNA constrants (normally not changed, except for no constraint)
+
+"""K's Code"""
+
+ratesOption = input("Press 0 for default Substitution/Deletion/Insertion rates, 1 for custom rates: ")
+if ratesOption == 0:
+    (srate, drate, irate) = 1.5 * array([0.0238, 0.0082, 0.0039])
+else:
+    srate = input("Substitution Rate: ")
+    drate = input("Deletion Rate: ")
+    irate = input("Insertion Rate: ")
+
+"""K's Code"""
+
+# set parameters for DNA constraints (normally not changed, except for no constraint)
 max_hpoly_run = 4 # max homopolymer length allowed (0 for no constraint)
 GC_window = 12 # window for GC count (0 for no constraint)
 max_GC = 8 # max GC allowed in window (0 for no constraint)
@@ -59,22 +71,32 @@ code.setcoderate(coderatecode,leftprimer,rightprimer) # set code rate with left 
 code.setdnaconstraints(GC_window, max_GC, min_GC, max_hpoly_run) # set DNA constraints (see paper)
 
 # define a source of plaintext bytes, either random or The Wizard of Oz in Esperanto
-UseWiz = True
-if UseWiz :
-    wizoffset = 0
-    wizfile = "WizardOfOzInEsperanto.txt"
-    with open(wizfile, 'r') as myfile: wiztext = myfile.read()
-    wizbytes = array([c for c in wiztext]).view(uint8)
-    wizlen = len(wizbytes)
-    def getwiz(n) : # return next n chars from wiztext
-        global wizoffset, wizlen
-        if wizoffset + n > wizlen : wizoffset = 0
-        bytes = wizbytes[wizoffset:wizoffset+n]
-        wizoffset += n
-        return bytes
-else :
-    def getwiz(n) :
-        return random.randint(0,high=256,size=n,dtype=uint8)
+"""K's Code"""
+
+dataOption = input("Press 0 for default data file, 1 for custom data file (place file in current directory): ")
+UseWiz = False
+if dataOption == 1:
+    customDataInputFile = raw_input('Data file name(Please add .txt to name): ')
+else:
+    customDataInputFile = "WizardOfOzInEsperanto.txt"
+print('Using file: {} as data'.format(customDataInputFile))
+
+"""K's Code"""
+
+# UseWiz = True
+fileoffset = 0
+with open(customDataInputFile, 'r') as myfile: filetext = myfile.read()
+filebytes = array([c for c in filetext]).view(uint8)
+wizlen = len(filebytes)
+def getdatafile(n) : # return next n chars from wiztext
+    global fileoffset, filelen
+    if fileoffset + n > wizlen : fileoffset = 0
+    bytes = filebytes[fileoffset:fileoffset+n]
+    fileoffset += n
+    return bytes
+# else:
+#     def getwiz(n):
+#         return random.randint(0, high=256, size=n, dtype=uint8)
 
 #print "test source of plaintext: (below should be same Esperanto text twice - weird characters OK)"
 #print wiztext[55722:55870]
@@ -90,7 +112,7 @@ def createmesspacket(packno) : # packno in range 0..255 with value 2 for strandI
         packet[i,0] = packno # note assumes value 2 for strandIDbytes
         packet[i,1] = i
         if i < strandsperpacketmessage :
-            ptext = getwiz(messbytesperstrand)
+            ptext = getdatafile(messbytesperstrand)
             packet[i,strandIDbytes:strandIDbytes+messbytesperstrand] = ptext
             plaintext[i*messbytesperstrand:(i+1)*messbytesperstrand] = ptext
     return (packet,plaintext)
