@@ -13,6 +13,7 @@
 from numpy import *
 import NRpyDNAcode as code
 import NRpyRS as RS
+import sys
 
 #import os
 #mydir = "D:\\Dropbox\\Projects\\DNAcode\\CodeAsPublished"
@@ -39,6 +40,10 @@ if totalStrandLenOption == 1:
     strandLenCandidate = input("Total strand length of the DNA (must be more than 46): ")
     if strandLenCandidate > 46:
         totstrandlen = strandLenCandidate
+
+outputPathOption = input("Press 0 for default output path (stdout), 1 for custom path: ")
+if outputPathOption == 1:
+    outputPathCandidate = raw_input("output path (please add .txt to name): ")
 
 """K's Code"""
 
@@ -84,7 +89,7 @@ if dataOption == 1:
     customDataInputFile = raw_input('Data file name(Please add .txt to name): ')
 else:
     customDataInputFile = "WizardOfOzInEsperanto.txt"
-print('Using file: {} as data'.format(customDataInputFile))
+print('Using file: {} as data input'.format(customDataInputFile))
 
 """K's Code"""
 
@@ -206,6 +211,11 @@ def createerrors(dnabag,srate,drate,irate) :
         newbag[i,:lenmin] = dna[:lenmin]
     return newbag
 
+if outputPathOption == 1:
+    sys.stdout = open(outputPathCandidate, "w")
+    print('Using file: {} as output path'.format(outputPathCandidate))
+else:
+    print('Using default stdout as output path')
 ## DO THE TEST
 print "for each packet, these statistics are shown in two groups:"
 print "1.1 HEDGES decode failures, 1.2 HEDGES bytes thus declared as erasures"

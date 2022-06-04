@@ -53,6 +53,7 @@ Run the program `test_program.py` using the command `python2.7 test_program.py`.
 When running the program you can take the default substitution, deletion, insertion rates or you can set custom rates.
 Also, default data input file is WizardOfOzInEsperanto.txt, it also can be changed to a custom input file.
 Same for strand length, custom DNA strand length can be provided.
+Same for defining output path, custom output path can be provided.
 
 ### Recompiling the C++ modules
 
