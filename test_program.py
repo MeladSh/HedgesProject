@@ -34,6 +34,11 @@ rightprimer = "TAGTGAGTGCGATTAAGCGTGTT" # for direct right appending (no revcomp
 # this test generates substitution, deletion, and insertion errors
 # sub,del,ins rates to simulate (as multiple of our observed values):
 
+totalStrandLenOption = input("Press 0 for default total strand length of the DNA (including left and right primers), 1 for custom length: ")
+if totalStrandLenOption == 1:
+    strandLenCandidate = input("Total strand length of the DNA (must be more than 46): ")
+    if strandLenCandidate > 46:
+        totstrandlen = strandLenCandidate
 
 """K's Code"""
 
