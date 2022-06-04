@@ -49,9 +49,9 @@ Supplied is not a single program, but a kit for variable user applications.  The
 
 ### Testing and familiarization
 
-Run the program `test_program.py` .  It should produce output comparable (but not identical) to the file `sample_linux_test_output.txt`.  The output will not be identical, because different random numbers are used to create DNA errors in each run.
-
-If the above works, then try varying some of the parameters.  In particular, you can change `coderatecode` to increase or decrease the code rate, the values `(srate,drate,irate)` to change the fraction of substitutions, deletions, and insertions generated for the test, and `totstrandlen`, the total strand length of the DNA (including left and right primers).  The many other parameters are either self-explanatory, or else described in the paper.  Most users will not initially need to change them.
+Run the program `test_program.py` using the command `python2.7 test_program.py`.
+When running the program you can take the default substitution, deletion, insertion rates or you can set custom rates.
+Also, default data input file is WizardOfOzInEsperanto.txt, it also can be changed to a custom input file.
 
 ### Recompiling the C++ modules
 
