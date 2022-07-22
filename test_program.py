@@ -9,7 +9,7 @@
 #
 # We encode a specified number of packets from known plaintext, create DNA errors, then
 # decode the DNA and compare.
-
+import numpy.version
 from numpy import *
 import NRpyDNAcode as code
 import NRpyRS as RS
@@ -35,25 +35,25 @@ rightprimer = "TAGTGAGTGCGATTAAGCGTGTT" # for direct right appending (no revcomp
 # this test generates substitution, deletion, and insertion errors
 # sub,del,ins rates to simulate (as multiple of our observed values):
 
-totalStrandLenOption = input("Press 0 for default total strand length of the DNA (including left and right primers), 1 for custom length: ")
+totalStrandLenOption = int(input("Press 0 for default total strand length of the DNA (including left and right primers), 1 for custom length: "))
 if totalStrandLenOption == 1:
-    strandLenCandidate = input("Total strand length of the DNA (must be more than 46): ")
+    strandLenCandidate = int(input("Total strand length of the DNA (must be more than 46): "))
     if strandLenCandidate > 46:
         totstrandlen = strandLenCandidate
 
-outputPathOption = input("Press 0 for default output path (stdout), 1 for custom path: ")
+outputPathOption = int(input("Press 0 for default output path (stdout), 1 for custom path: "))
 if outputPathOption == 1:
-    outputPathCandidate = raw_input("output path (please add .txt to name): ")
+    outputPathCandidate = input("output path (please add .txt to name): ")
 
 """K's Code"""
 
-ratesOption = input("Press 0 for default Substitution/Deletion/Insertion rates, 1 for custom rates: ")
+ratesOption = int(input("Press 0 for default Substitution/Deletion/Insertion rates, 1 for custom rates: "))
 if ratesOption == 0:
     (srate, drate, irate) = 1.5 * array([0.0238, 0.0082, 0.0039])
 else:
-    srate = input("Substitution Rate: ")
-    drate = input("Deletion Rate: ")
-    irate = input("Insertion Rate: ")
+    srate = float(input("Substitution Rate: "))
+    drate = float(input("Deletion Rate: "))
+    irate = float(input("Insertion Rate: "))
 
 """K's Code"""
 
@@ -79,14 +79,14 @@ messbytesperstrand = bytesperstrand - strandIDbytes - strandrunoutbytes # payloa
 messbytesperpacket = strandsperpacket * messbytesperstrand # payload bytes per packet of 255 strands
 code.setcoderate(coderatecode,leftprimer,rightprimer) # set code rate with left and right primers
 code.setdnaconstraints(GC_window, max_GC, min_GC, max_hpoly_run) # set DNA constraints (see paper)
-
+# print(numpy.version.version)
 # define a source of plaintext bytes, either random or The Wizard of Oz in Esperanto
 """K's Code"""
 
 dataOption = input("Press 0 for default data file, 1 for custom data file (place file in current directory): ")
 UseWiz = False
 if dataOption == 1:
-    customDataInputFile = raw_input('Data file name(Please add .txt to name): ')
+    customDataInputFile = input('Data file name(Please add .txt to name): ')
 else:
     customDataInputFile = "WizardOfOzInEsperanto.txt"
 print('Using file: {} as data input'.format(customDataInputFile))
@@ -96,7 +96,7 @@ print('Using file: {} as data input'.format(customDataInputFile))
 # UseWiz = True
 fileoffset = 0
 with open(customDataInputFile, 'r') as myfile: filetext = myfile.read()
-filebytes = array([c for c in filetext]).view(uint8)
+filebytes = array([ord(c) for c in filetext])
 wizlen = len(filebytes)
 def getdatafile(n) : # return next n chars from wiztext
     global fileoffset, filelen
@@ -118,7 +118,7 @@ def getdatafile(n) : # return next n chars from wiztext
 def createmesspacket(packno) : # packno in range 0..255 with value 2 for strandIDbytes
     packet = zeros([strandsperpacket,bytesperstrand],dtype=uint8)
     plaintext = zeros(strandsperpacketmessage*messbytesperstrand,dtype=uint8)
-    for i in range(strandsperpacket) :
+    for i in range(strandsperpacket):
         packet[i,0] = packno # note assumes value 2 for strandIDbytes
         packet[i,1] = i
         if i < strandsperpacketmessage :
@@ -128,12 +128,16 @@ def createmesspacket(packno) : # packno in range 0..255 with value 2 for strandI
     return (packet,plaintext)
 def protectmesspacket(packetin) : # fills in the RS check strands
     packet = packetin.copy()
-    regin = zeros(strandsperpacket,dtype=uint8)
+    regin = zeros(strandsperpacket, dtype=uint8)
     for j in range(messbytesperstrand) :
         for i in range(strandsperpacket) :
             regin[i] = packet[i,((j+i)% messbytesperstrand)+strandIDbytes]
+        # problem here
         regout = RS.rsencode(regin)
         for i in range(strandsperpacket) :
+            #print(i)
+            if i == 254:
+                x = 5
             packet[i,((j+i)% messbytesperstrand)+strandIDbytes] = regout[i]
     return packet
 
@@ -217,22 +221,24 @@ if outputPathOption == 1:
 else:
     print('Using default stdout as output path')
 ## DO THE TEST
-print "for each packet, these statistics are shown in two groups:"
-print "1.1 HEDGES decode failures, 1.2 HEDGES bytes thus declared as erasures"
-print "1.3 R-S total errors detected in packet, 1.4 max errors detected in a single decode"
-print "2.1 R-S reported as initially-uncorrected-but-recoverable total, 2.2 same, but max in single decode"
-print "2.3 R-S total error codes; if zero, then R-S corrected all errors"
-print "2.4 Actual number of byte errors when compared to known plaintext input"
+print("for each packet, these statistics are shown in two groups:")
+print("1.1 HEDGES decode failures, 1.2 HEDGES bytes thus declared as erasures")
+print("1.3 R-S total errors detected in packet, 1.4 max errors detected in a single decode")
+print("2.1 R-S reported as initially-uncorrected-but-recoverable total, 2.2 same, but max in single decode")
+print("2.3 R-S total error codes; if zero, then R-S corrected all errors")
+print("2.4 Actual number of byte errors when compared to known plaintext input")
 
 badpackets = 0
 Totalbads = zeros(8,dtype=int);
 for ipacket in range(npackets) :
-    
+
     # encode
-    messpack, messplain = createmesspacket(ipacket) # plaintext to message packet
-    rspack = protectmesspacket(messpack) # Reed-Solomon protect the packet
-    dnapack = messtodna(rspack) # encode to strands of DNA containing payload messplain
-    
+    messpack, messplain = createmesspacket(ipacket)  # plaintext to message packet
+    print("messpacket created")
+    rspack = protectmesspacket(messpack)  # Reed-Solomon protect the packet
+    print("messpacket protected")
+    dnapack = messtodna(rspack)  # encode to strands of DNA containing payload messplain
+    print("messtodna created")
     # simulate errors in DNA synthesis and sequencing
     obspack = createerrors(dnapack,srate,drate,irate)
 
