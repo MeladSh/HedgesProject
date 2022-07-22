@@ -6,8 +6,11 @@ SchifraCode<255, 32> rs;
 Ran ran;
 
 static PyObject* rsencode(PyObject *self, PyObject *pyargs) {
+    //import_array();
 	NRpyArgs args(pyargs);
+
 	if (args.size() != 1) {
+//	    cout << "args.size is not 1!" << endl;
 		NRpyException("rsencode takes 1 argument only");
 		return NRpyObject(0); // formerly NULL
 	}
@@ -15,12 +18,17 @@ static PyObject* rsencode(PyObject *self, PyObject *pyargs) {
 		NRpyException("rsencode requires array with dtype=uint8 \n");
 		return NRpyObject(0);
 	}
+        //problem here
+    //cout << "im here" << endl;
 	VecUchar message(args[0]);
 	if (message.size() != 255) {
 		NRpyException("rsencode requires input array of size exactly 255");
 		return NRpyObject(0);
 	}
+
 	VecUchar codetext = rs.encode(message);
+	//cout << "im here1" << endl;
+	//cout << "HERE" << endl;
 	return NRpyObject(codetext);
 }
 
@@ -107,8 +115,16 @@ static PyMethodDef NRpyRS_methods[] = {
 	"newcodetext = makeerrors(codetext,nerrors)" },
 	{ NULL, NULL, 0, NULL }
 };
-PyMODINIT_FUNC initNRpyRS(void) {
-	import_array();
-	Py_InitModule("NRpyRS", NRpyRS_methods);
+static struct PyModuleDef NRpyRS =
+{
+    PyModuleDef_HEAD_INIT,
+    "NRpyRS", /* name of module */
+    "", /* module documentation, may be NULL */
+    -1,   /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    NRpyRS_methods
+};
+PyMODINIT_FUNC PyInit_NRpyRS(void)
+{
+    import_array();
+    return PyModule_Create(&NRpyRS);
 }
-

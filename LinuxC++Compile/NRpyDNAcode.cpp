@@ -343,6 +343,8 @@ static PyObject* setcoderate(PyObject *self, PyObject *pyargs) {
 		return NRpyObject(Int(1));
 	}
 	Int pattnumber = NRpyInt(args[0]);
+	//for testing
+	//cout << "coderate: " << NRpyInt(args[0]);
 	if (pattnumber < 1 || pattnumber > 6) {
 		NRpyException("setcoderate arg must be in range 1 to 6");
 		return NRpyObject(Int(1));
@@ -968,8 +970,17 @@ static PyMethodDef NRpyDNAcode_methods[] = {
 	"hashedint = hashint(int)\n hash an integer by same algorithm as used throughout"},
 	{ NULL, NULL, 0, NULL }
 };
-PyMODINIT_FUNC initNRpyDNAcode(void) { // N.B. must rename to agree with module name
-	import_array();
-	Py_InitModule("NRpyDNAcode", NRpyDNAcode_methods);  // N.B. must rename first arg, not second
+static struct PyModuleDef NRpyDNAcode =
+{
+    PyModuleDef_HEAD_INIT,
+    "NRpyDNAcode", /* name of module */
+    "", /* module documentation, may be NULL */
+    -1,   /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    NRpyDNAcode_methods
+};
+PyMODINIT_FUNC PyInit_NRpyDNAcode(void)
+{
+    import_array();
+    return PyModule_Create(&NRpyDNAcode);
 }
 
