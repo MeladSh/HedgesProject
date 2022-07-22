@@ -23,7 +23,7 @@ import sys
 coderates = array([NaN, 0.75, 0.6, 0.5, 1./3., 0.25, 1./6.]) # table of coderates 1..6
 
 # user-settable parameters for this test
-coderatecode = 5 # test this coderate in coderates table above
+coderatecode = 3 # test this coderate in coderates table above
 npackets = 20 # number of packets (of 255 strands each) to generate and test
 totstrandlen = 300 # total length of DNA strand
 strandIDbytes = 2 # ID bytes each strand for packet and sequence number
@@ -76,9 +76,8 @@ messbytesperstrand = bytesperstrand - strandIDbytes - strandrunoutbytes # payloa
 messbytesperpacket = strandsperpacket * messbytesperstrand # payload bytes per packet of 255 strands
 code.setcoderate(coderatecode, leftprimer, rightprimer) # set code rate with left and right primers
 code.setdnaconstraints(GC_window, max_GC, min_GC, max_hpoly_run) # set DNA constraints (see paper)
-# print(numpy.version.version)
-# define a source of plaintext bytes, either random or The Wizard of Oz in Esperanto
 
+# define a source of plaintext bytes, either random or The Wizard of Oz in Esperanto
 dataOption = int(input("Press 0 for default data file, 1 for custom data file (place file in current directory): "))
 if dataOption == 1:
     customDataInputFile = input('Data file name(Please add .txt to name): ')

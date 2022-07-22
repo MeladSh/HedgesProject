@@ -343,8 +343,6 @@ static PyObject* setcoderate(PyObject *self, PyObject *pyargs) {
 		return NRpyObject(Int(1));
 	}
 	Int pattnumber = NRpyInt(args[0]);
-	//for testing
-	//cout << "coderate: " << NRpyInt(args[0]);
 	if (pattnumber < 1 || pattnumber > 6) {
 		NRpyException("setcoderate arg must be in range 1 to 6");
 		return NRpyObject(Int(1));

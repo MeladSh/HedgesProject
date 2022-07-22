@@ -6,20 +6,17 @@ SchifraCode<255, 32> rs;
 Ran ran;
 
 static PyObject* rsencode(PyObject *self, PyObject *pyargs) {
-    //import_array();
 	NRpyArgs args(pyargs);
 
 	if (args.size() != 1) {
-//	    cout << "args.size is not 1!" << endl;
 		NRpyException("rsencode takes 1 argument only");
-		return NRpyObject(0); // formerly NULL
+		return NRpyObject(0);
 	}
 	if (PyArray_TYPE(args[0]) != PyArray_UBYTE) {
 		NRpyException("rsencode requires array with dtype=uint8 \n");
 		return NRpyObject(0);
 	}
-        //problem here
-    //cout << "im here" << endl;
+
 	VecUchar message(args[0]);
 	if (message.size() != 255) {
 		NRpyException("rsencode requires input array of size exactly 255");
@@ -27,8 +24,6 @@ static PyObject* rsencode(PyObject *self, PyObject *pyargs) {
 	}
 
 	VecUchar codetext = rs.encode(message);
-	//cout << "im here1" << endl;
-	//cout << "HERE" << endl;
 	return NRpyObject(codetext);
 }
 

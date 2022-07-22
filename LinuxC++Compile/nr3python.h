@@ -90,7 +90,6 @@ struct NRpyArgs {
 // explicitly construct scalars and strings from PyObjects or Python namespace
 
 int NRpyIsNumber(PyObject* ob) {
-    //DEBUG: cout << "checking if argument is number, returning: " << PyLong_Check(ob);
     return (PyLong_Check(ob) || PyFloat_Check(ob));
 }
 
@@ -98,7 +97,6 @@ int NRpyIsNumber(PyObject* ob) {
 int NRpyInt(PyObject* ob) {
 	if (ob == Py_None) return 0;
 	if (NRpyIsNumber(ob)) {
-	    //DEBUG: cout << "Returning: " << PyLong_AsLong(ob) << endl;
 	    return int(PyLong_AsLong(ob)); // casts ob to int
 
 	}
@@ -379,7 +377,6 @@ void NRvector<T>::initpyvec(PyObject *a) {
 	if (! NRpyTypeOK<T>(a)) NRpyException("Python Array type does not agree with NRvector type.");
 	int i, ndim = PyArray_NDIM(a);
 	nn = 1;
-//	cout << "HERE" << endl;
 	for (i=0;i<ndim;i++) nn *= int(PyArray_DIMS(a)[i]);
 	v = (nn>0 ? (T*)PyArray_DATA(a) : NULL);
 }
@@ -456,11 +453,9 @@ void NRvector<T>::resize(int newn, bool preserve) {
 			if (preserve) {
 				int i, nmin = MIN(nn,newn);
 				T *vsave = v;
-				//v = newn > 0 ? new T[newn] : NULL;
 				v = newn > 0 ? (T*)PyMem_Malloc(newn*sizeof(T)) : NULL;
 				for (i=0;i<nmin;i++) v[i] = vsave[i];
 				for (i=nmin;i<newn;i++) v[i] = T(0);
-//				if (vsave != NULL) delete[] (vsave);
 				if (vsave != NULL) PyMem_Free(vsave);
 				nn = newn;
 			} else {
@@ -585,7 +580,6 @@ NRmatrix<T>::NRmatrix(int n, int m, const T &a) : nn(n), mm(m), ownsdata(1), v(n
 template <class T>
 NRmatrix<T>::NRmatrix(int n, int m, const T *a) : nn(n), mm(m), ownsdata(1), v(n>0 ? new T*[n] : NULL)
 {
-    cout << " hi1" << endl;
 	int i,j,nel=m*n;
 	if (v) v[0] = nel>0 ? (T*)PyMem_Malloc(nel*sizeof(T)) : NULL;
 	for (i=1; i< n; i++) v[i] = v[i-1] + m;
@@ -595,7 +589,6 @@ NRmatrix<T>::NRmatrix(int n, int m, const T *a) : nn(n), mm(m), ownsdata(1), v(n
 template <class T>
 NRmatrix<T>::NRmatrix(const NRmatrix &rhs) : nn(rhs.nn), mm(rhs.mm), ownsdata(1), v(nn>0 ? new T*[nn] : NULL)
 {
-    cout << "hi2" << endl;
 	int i,j,nel=mm*nn;
 	if (v) v[0] = nel>0 ? (T*)PyMem_Malloc(nel*sizeof(T)) : NULL;
 	for (i=1; i< nn; i++) v[i] = v[i-1] + mm;
@@ -604,7 +597,6 @@ NRmatrix<T>::NRmatrix(const NRmatrix &rhs) : nn(rhs.nn), mm(rhs.mm), ownsdata(1)
 
 template <class T>
 NRmatrix<T> & NRmatrix<T>::operator=(const NRmatrix<T> &rhs) {
-    cout << "hi3" << endl;
 	if (this != &rhs) {
 		int i,j;
 		if (nn != rhs.nn || mm != rhs.mm) {
@@ -653,7 +645,6 @@ inline int NRmatrix<T>::ncols() const
 
 template <class T>
 void NRmatrix<T>::resize(int newn, int newm) {
-    cout << "hi4" << endl;
 	int i,nel;
 	if (newn != nn || newm != mm) {
 		nn = newn;
