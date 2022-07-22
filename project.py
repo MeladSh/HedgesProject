@@ -44,7 +44,7 @@ if totalStrandLenOption == 1:
 
 outputPathOption = int(input("Press 0 for default output path (stdout), 1 for custom path: "))
 if outputPathOption == 1:
-    outputPathCandidate = input("output path (please add .txt to name): ")
+    outputPathCandidate = input("output path")
 
 ratesOption = int(input("Press 0 for default Substitution/Deletion/Insertion rates, 1 for custom rates: "))
 if ratesOption == 0:
@@ -78,16 +78,20 @@ code.setcoderate(coderatecode, leftprimer, rightprimer) # set code rate with lef
 code.setdnaconstraints(GC_window, max_GC, min_GC, max_hpoly_run) # set DNA constraints (see paper)
 
 # define a source of plaintext bytes, either random or The Wizard of Oz in Esperanto
-dataOption = int(input("Press 0 for default data file, 1 for custom data file (place file in current directory): "))
-if dataOption == 1:
-    customDataInputFile = input('Data file name(Please add .txt to name): ')
+dataOption = int(input("Press 0 for default data file, 1 for custom data file, 2 for binary file: "))
+if dataOption == 1 or dataOption == 2:
+    customDataInputFile = input('Data file name: ')
 else:
     customDataInputFile = "WizardOfOzInEsperanto.txt"
 print('Using file: {} as data input'.format(customDataInputFile))
 
 fileoffset = 0
-with open(customDataInputFile, 'r') as myfile: filetext = myfile.read()
-filebytes = array([ord(c) for c in filetext]).astype(uint8)
+if dataOption == 2:
+    with open(customDataInputFile, 'rb') as myfile: filetext = myfile.read()
+    filebytes = array([c for c in filetext])
+else:
+    with open(customDataInputFile, 'r') as myfile: filetext = myfile.read()
+    filebytes = array([ord(c) for c in filetext]).astype(uint8)
 wizlen = len(filebytes)
 def getdatafile(n): # return next n chars from wiztext
     global fileoffset, filelen
