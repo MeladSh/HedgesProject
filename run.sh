@@ -1,6 +1,8 @@
 #!/bin/bash
 
 compile_files(){
+  echo "--------------------Compiling-------------------"
+  sleep 1
 	cd LinuxC++Compile
 	g++ -fPIC -fpermissive -w -c NRpyDNAcode.cpp -o NRpyDNAcode.o -I/usr/include/python3.8 \
 	 -I/usr/local/lib/python3.8/dist-packages/numpy/core/include
@@ -11,11 +13,12 @@ compile_files(){
 	g++ -shared NRpyRS.o -o NRpyRS.so
 	mv NRpyDNAcode.so ../
 	mv NRpyRS.so ../
-	echo "compilation done"
 	cd ..
 }
 
 run_internal(){
+  echo "--------------------Running Project-------------------"
+  sleep 1
 	# run python script with Environment Variable - PYTHONMALLOC=malloc
 	PYTHONMALLOC=malloc python3.8 project.py
 }
