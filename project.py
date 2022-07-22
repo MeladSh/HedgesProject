@@ -46,6 +46,11 @@ outputPathOption = int(input("Press 0 for default output path (stdout), 1 for cu
 if outputPathOption == 1:
     outputPathCandidate = input("output path")
 
+codeRateOption = int(input("Press 0 for default code rate, 1 for custom code rate: "))
+if codeRateOption == 1:
+    coderatecode = int(input("Press 1 for 0.75, 2 for 0.6, 3 for 0.5, 4 for 0.33, 5 for 0.25, 6 for 0.166: "))
+
+
 ratesOption = int(input("Press 0 for default Substitution/Deletion/Insertion rates, 1 for custom rates: "))
 if ratesOption == 0:
     (srate, drate, irate) = 1.5 * array([0.0238, 0.0082, 0.0039])
