@@ -7,7 +7,7 @@
 #ifndef _NR3_H_
 #define _NR3_H_
 #ifndef Py_PYTHON_H
-#include "Python.h"
+#include "python3.8/Python.h"
 #endif
 #ifndef Py_ARRAYOBJECT_H
 #include "numpy/arrayobject.h"
@@ -78,6 +78,7 @@ struct NRpyArgs {
 	PyObject* pyargs;
 	NRpyArgs(PyObject* pyaargs) : pyargs(pyaargs) {}
 	int size() {return int(PyTuple_Size(pyargs));}
+
 	PyObject* operator[](int i) {
 		if (i<PyTuple_Size(pyargs)) return PyTuple_GetItem(pyargs,i);
 		// Returns a borrowed (unprotected) ref.  Args refs owned by calling routine.
@@ -88,12 +89,19 @@ struct NRpyArgs {
 
 // explicitly construct scalars and strings from PyObjects or Python namespace
 
-int NRpyIsNumber(PyObject* ob) {return (PyInt_Check(ob) || PyFloat_Check(ob));}
+int NRpyIsNumber(PyObject* ob) {
+    //DEBUG: cout << "checking if argument is number, returning: " << PyLong_Check(ob);
+    return (PyLong_Check(ob) || PyFloat_Check(ob));
+}
 
 // type Int
 int NRpyInt(PyObject* ob) {
 	if (ob == Py_None) return 0;
-	if (NRpyIsNumber(ob)) return int(PyInt_AsLong(ob)); // casts ob to int
+	if (NRpyIsNumber(ob)) {
+	    //DEBUG: cout << "Returning: " << PyLong_AsLong(ob) << endl;
+	    return int(PyLong_AsLong(ob)); // casts ob to int
+
+	}
 	else NRpyException("NRpyInt argument is not a number.");
 	return 0;
 }
@@ -114,7 +122,7 @@ double NRpyDoub(char *name, char *dict = NULL) {
 
 // type char* (string)
 char* NRpyCharP(PyObject *ob) {
-	if (PyString_Check(ob)) return PyString_AsString(ob);
+	if (PyUnicode_Check(ob)) return PyUnicode_AsUTF8(ob);
 	else NRpyException("NRpyCharP argument is not a string.");
 	return NULL;
 }
@@ -193,10 +201,10 @@ template<class T> PyObject* NRpyObject(T &a) {
 	return thing;
 }
 PyObject* NRpyObject(const double a) {return PyFloat_FromDouble(a);}
-PyObject* NRpyObject(const int a) {return PyInt_FromLong(a);}
-PyObject* NRpyObject(const unsigned long long a) {return PyInt_FromSize_t(a);}
+PyObject* NRpyObject(const int a) {return PyLong_FromLong(a);}
+PyObject* NRpyObject(const unsigned long long a) {return PyLong_FromSize_t(a);}
 PyObject* NRpyObject(const bool a) {return PyBool_FromLong(a);}
-PyObject* NRpyObject(const char *a) {return PyString_FromString(a);} // string is copied
+PyObject* NRpyObject(const char *a) {return PyUnicode_FromString(a);} // string is copied
 PyObject* NRpyObject() {return Py_BuildValue("");} // Python None
 PyObject* NRpyObject(NRpyList &a) {
 	if (! a.isnew) Py_INCREF(a.p); // make a new reference to return (should happen rarely)
@@ -362,13 +370,16 @@ NRvector<T>::NRvector(int n) : nn(n), ownsdata(1), v(n>0 ? (T*)PyMem_Malloc(n*si
 
 template <class T>
 void NRvector<T>::initpyvec(PyObject *a) {
+    import_array();
 	ownsdata = 0;
 	pyident = a;
+
 	if (! PyArray_CheckExact(a)) NRpyException("PyObject is not an Array in NRvector constructor.");
 	if (! PyArray_ISCARRAY_RO(a)) NRpyException("Python Array must be contiguous (e.g., not strided).");
 	if (! NRpyTypeOK<T>(a)) NRpyException("Python Array type does not agree with NRvector type.");
 	int i, ndim = PyArray_NDIM(a);
 	nn = 1;
+//	cout << "HERE" << endl;
 	for (i=0;i<ndim;i++) nn *= int(PyArray_DIMS(a)[i]);
 	v = (nn>0 ? (T*)PyArray_DATA(a) : NULL);
 }
@@ -449,7 +460,7 @@ void NRvector<T>::resize(int newn, bool preserve) {
 				v = newn > 0 ? (T*)PyMem_Malloc(newn*sizeof(T)) : NULL;
 				for (i=0;i<nmin;i++) v[i] = vsave[i];
 				for (i=nmin;i<newn;i++) v[i] = T(0);
-				//if (vsave != NULL) delete[] (vsave);
+//				if (vsave != NULL) delete[] (vsave);
 				if (vsave != NULL) PyMem_Free(vsave);
 				nn = newn;
 			} else {
@@ -564,6 +575,7 @@ template <class T> NRmatrix<T>::NRmatrix(char *name, char *dict ) {
 template <class T>
 NRmatrix<T>::NRmatrix(int n, int m, const T &a) : nn(n), mm(m), ownsdata(1), v(n>0 ? new T*[n] : NULL)
 {
+    cout << " hi" << endl;
 	int i, j, nel=m*n;
 	if (v) v[0] = nel>0 ? (T*)PyMem_Malloc(nel*sizeof(T)) : NULL;
 	for (i=1; i< n; i++) v[i] = v[i-1] + m;
@@ -573,6 +585,7 @@ NRmatrix<T>::NRmatrix(int n, int m, const T &a) : nn(n), mm(m), ownsdata(1), v(n
 template <class T>
 NRmatrix<T>::NRmatrix(int n, int m, const T *a) : nn(n), mm(m), ownsdata(1), v(n>0 ? new T*[n] : NULL)
 {
+    cout << " hi1" << endl;
 	int i,j,nel=m*n;
 	if (v) v[0] = nel>0 ? (T*)PyMem_Malloc(nel*sizeof(T)) : NULL;
 	for (i=1; i< n; i++) v[i] = v[i-1] + m;
@@ -582,6 +595,7 @@ NRmatrix<T>::NRmatrix(int n, int m, const T *a) : nn(n), mm(m), ownsdata(1), v(n
 template <class T>
 NRmatrix<T>::NRmatrix(const NRmatrix &rhs) : nn(rhs.nn), mm(rhs.mm), ownsdata(1), v(nn>0 ? new T*[nn] : NULL)
 {
+    cout << "hi2" << endl;
 	int i,j,nel=mm*nn;
 	if (v) v[0] = nel>0 ? (T*)PyMem_Malloc(nel*sizeof(T)) : NULL;
 	for (i=1; i< nn; i++) v[i] = v[i-1] + mm;
@@ -590,6 +604,7 @@ NRmatrix<T>::NRmatrix(const NRmatrix &rhs) : nn(rhs.nn), mm(rhs.mm), ownsdata(1)
 
 template <class T>
 NRmatrix<T> & NRmatrix<T>::operator=(const NRmatrix<T> &rhs) {
+    cout << "hi3" << endl;
 	if (this != &rhs) {
 		int i,j;
 		if (nn != rhs.nn || mm != rhs.mm) {
@@ -638,6 +653,7 @@ inline int NRmatrix<T>::ncols() const
 
 template <class T>
 void NRmatrix<T>::resize(int newn, int newm) {
+    cout << "hi4" << endl;
 	int i,nel;
 	if (newn != nn || newm != mm) {
 		nn = newn;
