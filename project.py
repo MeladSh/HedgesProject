@@ -239,8 +239,8 @@ for ipacket in range(npackets) :
     
     # print summary line
     Totalbads += array([baddecodes, erasures, tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes])
-    print("%3d: (%3d %3d %3d %3d) (%3d %3d %3d %3d)" % (ipacket, baddecodes, erasures,
-        tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes)),
+    print(("%3d: (%3d %3d %3d %3d) (%3d %3d %3d %3d)" % (ipacket, baddecodes, erasures,
+        tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes)), end=' ')
     print("packet OK" if badbytes == 0 else "packet NOT ok")
     if badbytes: badpackets += 1
 print("all packets OK" if not badpackets else "some packets had errors!")
