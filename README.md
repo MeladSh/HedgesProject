@@ -32,34 +32,28 @@ virtualenv envhedges
 Now install required packages:
 
 ```
-sudo apt-get install python2.7-dev
-sudo apt-get install python2.7-numpy
+sudo chmod u+x setup.sh
+./setup.sh
 ```
 
 ### What is supplied
 Supplied is not a single program, but a kit for variable user applications.  The kit consists of
 
-1. C++ source code that compiles (in Linux) to the Python-includable module `NRpyDNAcode`.  Precompiled binaries are supplied for Python 2.7 in Linux, but recompilation may be necessary if these don't work.  This module implements the HEDGES "inner code" as described in the paper.
+1. C++ source code that compiles (in Linux) to the Python-includable module `NRpyDNAcode`.  This module implements the HEDGES "inner code" as described in the paper.
 
-2.  C++ source code that compiles (in Linux) to the Python-includable module `NRpyRS`.  Precompiled binaries are supplied for Python 2.7 in Linux, but recompilation may be necessary if these don't work.  This module implements the Schifra Reed-Solomon Error Correcting Code Library.  See http://www.schifra.com  for details and license restrictions.  This module is not needed for the HEDGES inner code, but is needed only to implement the "outer code" as described in the paper.  Some users will instead want to utilize their own outer codes.
+2. C++ source code that compiles (in Linux) to the Python-includable module `NRpyRS`.  This module implements the Schifra Reed-Solomon Error Correcting Code Library.  See http://www.schifra.com  for details and license restrictions.  This module is not needed for the HEDGES inner code, but is needed only to implement the "outer code" as described in the paper.  Some users will instead want to utilize their own outer codes.
  
-3.  Python program `print_module_test_files.py`, which verifies that the above modules can be loaded and prints their usage.  Most users will not need to use any of the routines in these files directly, but should instead use the Python functions in the following file:
- 
-4. Python program `test_program.py` .  This defines various user-level functions for implementing the HEDGES inner and Reed-Solomon outer codes as described in the paper.  The example inputs arbitrary bytes from the file `WizardOfOzInEsperanto.txt`, encodes a specified number of packets (each with 255 DNA strands), corrupts the strands with a specified level of random substitutions, insertions, and deletions, decodes the strands, and verifies the error correction.  To better validate the installation, the code rate and corruption level set by default are chosen to be stressful to HEDGES and is greater than that in an intended use case. 
+3. Python program `project.py` .  This defines various user-level functions for implementing the HEDGES inner and Reed-Solomon outer codes as described in the paper.  The default example inputs arbitrary bytes from the file `WizardOfOzInEsperanto.txt`, encodes a specified number of packets (each with 255 DNA strands), corrupts the strands with a specified level of random substitutions, insertions, and deletions, decodes the strands, and verifies the error correction.  To better validate the installation, the code rate and corruption level set by default are chosen to be stressful to HEDGES and is greater than that in an intended use case. 
 
 ### Testing and familiarization
 
-Run the program `test_program.py` using the command `python2.7 test_program.py`.
-When running the program you can take the default substitution, deletion, insertion rates or you can set custom rates.
-Also, default data input file is WizardOfOzInEsperanto.txt, it also can be changed to a custom input file.
-Same for strand length, custom DNA strand length can be provided.
-Same for defining output path, custom output path can be provided.
-
-### Recompiling the C++ modules
-
-The modules are built using the Numerical Recipes C++ class library `nr3python.h` . This is included here and also freely available for unlimited distribution at http://numerical.recipes/nr3python.h .  Generally, you will not need to understand this library, but, if you are curious, a tutorial on its use is at http://numerical.recipes/nr3_python_tutorial.html .  You should also consult this tutorial if you have difficulty recompiling the modules.  Note that while other Numerical Recipes routines are copyright and require a license, no restricted routines are used in the two modules here supplied.
-
-In Linux, go to the directory `LinuxC++Compile` containing the source code and run the script `compile_all.sh` .  Then copy the two files produced, `NRpyDNAcode.so` and `NRpyRS.so`, to the directory containing `test_program.py`.  The most common source of errors is the compiler's inability to find required Python and Numpy include and library files that are part of your Python installation.  Unfortunately, we can't help you with that.
+Compile and run the program `project.py` using the running script `./run.sh`.
+When running the program you can take choose the following: 
+1.	Choose custom strand length, default value is 300.
+2.	Choose custom output path, default output path is stdout.
+3.	Choose custom code rate of the following: [0.75, 0.6, 0.5, 0.33, 0.25, 0.166], default code rate is 0.5.
+4.	Choose custom substitution/deletion/insertion rates, default rates are [s:0.0238, d:0.0082, i:0.0039].
+5.	Choose custom input file, default input file is WizardOfOzInEsperanto.txt.
 
 ### LICENSE (MIT License)
 
