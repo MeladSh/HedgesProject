@@ -52,7 +52,7 @@ When running the program you can take choose the following:
 1.	Choose custom strand length, default value is 300.
 2.	Choose custom output path, default output path is stdout.
 3.	Choose custom code rate of the following: [0.75, 0.6, 0.5, 0.33, 0.25, 0.166], default code rate is 0.5.
-4.	Choose custom substitution/deletion/insertion rates, default rates are [s:0.0238, d:0.0082, i:0.0039].
+4.	Choose custom substitution/deletion/insertion rates, default rates are [s:0.0357, d:0.0123, i:0.00585].
 5.	Choose custom input file, default input file is WizardOfOzInEsperanto.txt.
 
 ### LICENSE (MIT License)
