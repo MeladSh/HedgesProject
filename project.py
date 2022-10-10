@@ -16,6 +16,7 @@ import NRpyRS as RS
 import sys
 import pathlib
 import os
+import datetime
 
 #mydir = "D:\\Dropbox\\Projects\\DNAcode\\CodeAsPublished"
 #os.chdir(mydir)
@@ -213,6 +214,9 @@ else:
 ## DO THE TEST
 print("DNA mapping used in the project [0: A, 1: C, 2: G, 3: T]")
 print("------------------------------------------")
+print("Log file for the current run can be found under logs directory with a timestamp of the current time")
+print("the log file includes for each packet: packet number, message packet, plain message, reed solomon packet, dna packet.")
+print("------------------------------------------")
 print("for each packet, these statistics are shown in two groups:")
 print("Packet number: (1.1, 1.2, 1.3, 1.4) (2.1, 2.2, 2.3, 2.4) packet OK/NOT")
 print("------------------------------------------")
@@ -233,12 +237,37 @@ Totalbads = zeros(8, dtype=int)
 LogsPath = str(pathlib.Path().resolve()) + "/logs"
 pathlib.Path(LogsPath).mkdir(parents=True, exist_ok=True)
 
-for ipacket in range(npackets) :
+# Create a log for the current run
+currentTime = str(datetime.datetime.now())
+currentTime = currentTime.replace(':', '_')
+file = open(LogsPath + "/" + currentTime + ".txt",'a')
 
+file.write('HEDGES error-correcting code for DNA storage corrects indels and allows sequence constraints\n')
+numpy.set_printoptions(threshold=sys.maxsize)
+for ipacket in range(npackets) :
+    file.write('--------------------------------------------------------------------------------------------\n')
+    file.write("Packet number: %d \n" % ipacket)
+    file.write("--------------------\n")
     # encode
     messpack, messplain = createmesspacket(ipacket)  # plaintext to message packet
+    file.write("messpack: \n")
+    file.write("--------------------\n")
+    file.writelines(str(messpack) + "\n")
+    file.write("--------------------\n")
+    file.write("messplain: \n")
+    file.write("--------------------\n")
+    file.writelines(str(messplain)+ "\n")
+    file.write("--------------------\n")
     rspack = protectmesspacket(messpack)  # Reed-Solomon protect the packet
+    file.write("rspack: \n")
+    file.write("--------------------\n")
+    file.writelines(str(rspack)+ "\n")
+    file.write("--------------------\n")
     dnapack = messtodna(rspack)  # encode to strands of DNA containing payload messplain
+    file.write("dnapack: \n")
+    file.write("--------------------\n")
+    file.writelines(str(dnapack)+ "\n")
+    file.write("--------------------\n")
     # simulate errors in DNA synthesis and sequencing
     obspack = createerrors(dnapack, srate, drate, irate)
 
