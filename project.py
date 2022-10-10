@@ -211,13 +211,20 @@ if outputPathOption == 1:
 else:
     print('Using default stdout as output path')
 ## DO THE TEST
+print("------------------------------------------")
 print("for each packet, these statistics are shown in two groups:")
-print("1.1 HEDGES decode failures, 1.2 HEDGES bytes thus declared as erasures")
-print("1.3 R-S total errors detected in packet, 1.4 max errors detected in a single decode")
-print("2.1 R-S reported as initially-uncorrected-but-recoverable total, 2.2 same, but max in single decode")
+print("Packet number: (1.1, 1.2, 1.3, 1.4) (2.1, 2.2, 2.3, 2.4) packet OK/NOT")
+print("------------------------------------------")
+print("1.1 HEDGES decode failures")
+print("1.2 HEDGES bytes thus declared as erasures")
+print("1.3 R-S total errors detected in packet")
+print("1.4 max errors detected in a single decode")
+print("------------------------------------------")
+print("2.1 R-S reported as initially-uncorrected-but-recoverable total")
+print("2.2 same, but max in single decode")
 print("2.3 R-S total error codes; if zero, then R-S corrected all errors")
 print("2.4 Actual number of byte errors when compared to known plaintext input")
-
+print("------------------------------------------")
 badpackets = 0
 Totalbads = zeros(8, dtype=int)
 for ipacket in range(npackets) :
