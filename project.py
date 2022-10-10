@@ -211,6 +211,7 @@ if outputPathOption == 1:
 else:
     print('Using default stdout as output path')
 ## DO THE TEST
+print("DNA mapping used in the project [0: A, 1: C, 2: G, 3: T]")
 print("------------------------------------------")
 print("for each packet, these statistics are shown in two groups:")
 print("Packet number: (1.1, 1.2, 1.3, 1.4) (2.1, 2.2, 2.3, 2.4) packet OK/NOT")
