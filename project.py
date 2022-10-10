@@ -14,12 +14,12 @@ from numpy import *
 import NRpyDNAcode as code
 import NRpyRS as RS
 import sys
+import pathlib
+import os
 
-#import os
 #mydir = "D:\\Dropbox\\Projects\\DNAcode\\CodeAsPublished"
 #os.chdir(mydir)
 #print help(code) # uncomment to see NRpyDNAcode help output
-
 coderates = array([NaN, 0.75, 0.6, 0.5, 1./3., 0.25, 1./6.]) # table of coderates 1..6
 
 # user-settable parameters for this test
@@ -228,6 +228,11 @@ print("2.4 Actual number of byte errors when compared to known plaintext input")
 print("------------------------------------------")
 badpackets = 0
 Totalbads = zeros(8, dtype=int)
+
+# Create a logging directory
+LogsPath = str(pathlib.Path().resolve()) + "/logs"
+pathlib.Path(LogsPath).mkdir(parents=True, exist_ok=True)
+
 for ipacket in range(npackets) :
 
     # encode
