@@ -35,23 +35,23 @@ rightprimer = "TAGTGAGTGCGATTAAGCGTGTT" # for direct right appending (no revcomp
 # this test generates substitution, deletion, and insertion errors
 # sub,del,ins rates to simulate (as multiple of our observed values):
 
-totalStrandLenOption = int(input("Press 0 for default total strand length of the DNA (including left and right primers)"
+totalStrandLenOption = int(input("Press 0 for default [300] total strand length of the DNA (including left and right primers)"
                                  ", 1 for custom length: "))
 if totalStrandLenOption == 1:
     strandLenCandidate = int(input("Total strand length of the DNA (must be more than 46): "))
     if strandLenCandidate > 46:
         totstrandlen = strandLenCandidate
 
-outputPathOption = int(input("Press 0 for default output path (stdout), 1 for custom path: "))
+outputPathOption = int(input("Press 0 for default [stdout] output path, 1 for custom path: "))
 if outputPathOption == 1:
     outputPathCandidate = input("output path")
 
-codeRateOption = int(input("Press 0 for default code rate, 1 for custom code rate: "))
+codeRateOption = int(input("Press 0 for default [0.5] code rate, 1 for custom code rate: "))
 if codeRateOption == 1:
     coderatecode = int(input("Press 1 for 0.75, 2 for 0.6, 3 for 0.5, 4 for 0.33, 5 for 0.25, 6 for 0.166: "))
 
 
-ratesOption = int(input("Press 0 for default Substitution/Deletion/Insertion rates, 1 for custom rates: "))
+ratesOption = int(input("Press 0 for default [s:0.0238, d:0.0082, i:0.0039] Substitution/Deletion/Insertion rates, 1 for custom rates: "))
 if ratesOption == 0:
     (srate, drate, irate) = 1.5 * array([0.0238, 0.0082, 0.0039])
 else:
@@ -83,7 +83,7 @@ code.setcoderate(coderatecode, leftprimer, rightprimer) # set code rate with lef
 code.setdnaconstraints(GC_window, max_GC, min_GC, max_hpoly_run) # set DNA constraints (see paper)
 
 # define a source of plaintext bytes, either random or The Wizard of Oz in Esperanto
-dataOption = int(input("Press 0 for default data file, 1 for custom data file, 2 for binary file: "))
+dataOption = int(input("Press 0 for default [WizardOfOzInEsperanto.txt] input data file, 1 for custom data file, 2 for binary file: "))
 if dataOption == 1 or dataOption == 2:
     customDataInputFile = input('Data file name: ')
 else:
