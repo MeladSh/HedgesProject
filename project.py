@@ -36,8 +36,7 @@ rightprimer = "TAGTGAGTGCGATTAAGCGTGTT" # for direct right appending (no revcomp
 # this test generates substitution, deletion, and insertion errors
 # sub,del,ins rates to simulate (as multiple of our observed values):
 
-totalStrandLenOption = int(input("Press 0 for default [300] total strand length of the DNA (including left and right primers)"
-                                 ", 1 for custom length: "))
+totalStrandLenOption = int(input("Press 0 for default [300] total strand length of the DNA (including left and right primers)"", 1 for custom length: "))
 if totalStrandLenOption == 1:
     strandLenCandidate = int(input("Total strand length of the DNA (must be more than 46): "))
     if strandLenCandidate > 46:
@@ -59,6 +58,8 @@ else:
     srate = float(input("Substitution Rate: "))
     drate = float(input("Deletion Rate: "))
     irate = float(input("Insertion Rate: "))
+
+readsNumber = int(input("Press 1 for a 1 read, 3 for 3 reads, 5 for 5 reads"))
 
 # set parameters for DNA constraints (normally not changed, except for no constraint)
 max_hpoly_run = 4 # max homopolymer length allowed (0 for no constraint)
@@ -206,6 +207,37 @@ def createerrors(dnabag,srate,drate,irate) :
         newbag[i, :lenmin] = dna[:lenmin]
     return newbag
 
+def most_frequent(List):
+    counter = 0
+    num = List[0]
+    idx = 0
+    for i, item in enumerate(List):
+        curr_frequency = List.count(i)
+        if(curr_frequency> counter):
+            counter = curr_frequency
+            num = item
+            idx = i
+
+    return num, idx
+
+def calculate_optimal_packet(dpackets, epackets):
+    optimal_d_packet = []
+    optimal_e_packet = []
+    for i in range(len(dpackets[0])):
+        optimal_mini_d_packet = [None]*len(dpackets[0][0])
+        optimal_mini_e_packet = [None] * len(epackets[0][0])
+        for j in range(len(dpackets[0][0])):
+            bytes_to_compare = [dpackets[index][i][j] for index in range(readsNumber)]
+            optimal_mini_d_packet[j], idx = most_frequent(bytes_to_compare)
+            optimal_mini_e_packet[j] = epackets[idx][i][j]
+        optimal_d_packet.append(optimal_mini_d_packet.copy())
+        optimal_e_packet.append(optimal_mini_e_packet.copy())
+    optimal_d_packet = numpy.array(optimal_d_packet)
+    optimal_e_packet = numpy.array(optimal_e_packet)
+    return optimal_d_packet, optimal_e_packet
+
+
+
 if outputPathOption == 1:
     sys.stdout = open(outputPathCandidate, "w")
     print('Using file: {} as output path'.format(outputPathCandidate))
@@ -268,20 +300,32 @@ for ipacket in range(npackets) :
     file.write("--------------------\n")
     file.writelines(str(dnapack)+ "\n")
     file.write("--------------------\n")
-    # simulate errors in DNA synthesis and sequencing
-    obspack = createerrors(dnapack, srate, drate, irate)
 
-    # decode
-    (dpacket, epacket, baddecodes, erasures) = dnatomess(obspack) # decode the strands
-    (cpacket, tot_detect, tot_uncorrect, max_detect, max_uncorrect, toterrcodes) = correctmesspacket(dpacket, epacket)
-    
+    dnapacks = [dnapack.copy() for i in range(readsNumber)]
+    obspacks = [None]*readsNumber
+    dpackets = [None]*readsNumber
+    epackets = [None]*readsNumber
+    baddecodes = [None]*readsNumber
+    erasures = [None]*readsNumber
+
+    for i in range(readsNumber):
+        # simulate errors in DNA synthesis and sequencing
+        obspacks[i] = createerrors(dnapacks[i], srate, drate, irate)
+        # decode
+        (dpackets[i], epackets[i], baddecodes[i], erasures[i]) = dnatomess(obspacks[i]) # decode the strands
+
+    # now we have to compare between the different decodes of the different reads and take the majority of values
+    optimal_d_packet, optimal_e_packet = calculate_optimal_packet(dpackets, epackets)
+
+    (cpacket, tot_detect, tot_uncorrect, max_detect, max_uncorrect, toterrcodes) = correctmesspacket(optimal_d_packet, optimal_e_packet)
+
     # check against ground truth
     messcheck = extractplaintext(cpacket)
     badbytes = count_nonzero(messplain-messcheck)
-    
+
     # print summary line
-    Totalbads += array([baddecodes, erasures, tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes])
-    print(("%3d: (%3d %3d %3d %3d) (%3d %3d %3d %3d)" % (ipacket, baddecodes, erasures,
+    Totalbads += array([baddecodes[0], erasures[0], tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes])
+    print(("%3d: (%3d %3d %3d %3d) (%3d %3d %3d %3d)" % (ipacket, baddecodes[0], erasures[0],
         tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes)), end=' ')
     print("packet OK" if badbytes == 0 else "packet NOT ok")
     if badbytes: badpackets += 1
