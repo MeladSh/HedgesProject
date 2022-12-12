@@ -835,7 +835,7 @@ static PyObject* tryallcoderates(PyObject *self, PyObject *pyargs) {
 	return NRpyObject(maxoffsets);
 }
 
-static PyObject* createerrsdecrors(PyObject *self, PyObject *pyargs) {
+static PyObject* createerrors(PyObject *self, PyObject *pyargs) {
 	NRpyArgs args(pyargs);
 	if (args.size() != 4) {
 		NRpyException("createerrors takes exactly 4 arguments");
