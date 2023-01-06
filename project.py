@@ -36,8 +36,7 @@ rightprimer = "TAGTGAGTGCGATTAAGCGTGTT" # for direct right appending (no revcomp
 # this test generates substitution, deletion, and insertion errors
 # sub,del,ins rates to simulate (as multiple of our observed values):
 
-totalStrandLenOption = int(input("Press 0 for default [300] total strand length of the DNA (including left and right primers)"
-                                 ", 1 for custom length: "))
+totalStrandLenOption = int(input("Press 0 for default [300] total strand length of the DNA (including left and right primers)"", 1 for custom length: "))
 if totalStrandLenOption == 1:
     strandLenCandidate = int(input("Total strand length of the DNA (must be more than 46): "))
     if strandLenCandidate > 46:
@@ -60,6 +59,8 @@ else:
     drate = float(input("Deletion Rate: "))
     irate = float(input("Insertion Rate: "))
 
+readsNumber = int(input("Press 1 for a 1 read, 3 for 3 reads, 5 for 5 reads: "))
+
 # set parameters for DNA constraints (normally not changed, except for no constraint)
 max_hpoly_run = 4 # max homopolymer length allowed (0 for no constraint)
 GC_window = 12 # window for GC count (0 for no constraint)
@@ -77,7 +78,7 @@ strandlen = totstrandlen - leftlen - rightlen
 strandsperpacketmessage = strandsperpacket - strandsperpacketcheck
 (NSALT, MAXSEQ, NSTAK, HLIMIT) = code.getparams() # get settable code parameters
 code.setparams(8*strandIDbytes, MAXSEQ, NSTAK, hlimit) # change NSALT and HLIMIT
-bytesperstrand = int(strandlen*coderates[coderatecode]/4.)    
+bytesperstrand = int(strandlen*coderates[coderatecode]/4.)
 messbytesperstrand = bytesperstrand - strandIDbytes - strandrunoutbytes # payload bytes per strand
 messbytesperpacket = strandsperpacket * messbytesperstrand # payload bytes per packet of 255 strands
 code.setcoderate(coderatecode, leftprimer, rightprimer) # set code rate with left and right primers
@@ -108,8 +109,8 @@ def getdatafile(n): # return next n chars from wiztext
 
 # functions to create sequential packets from the plaintext source, and R-S protect them
 def createmesspacket(packno) : # packno in range 0..255 with value 2 for strandIDbytes
-    packet = zeros([strandsperpacket,bytesperstrand], dtype=uint8)
-    plaintext = zeros(strandsperpacketmessage*messbytesperstrand, dtype=uint8)
+    packet = zeros([strandsperpacket, bytesperstrand], dtype=uint8) # 2d Array [255][31]*8bits
+    plaintext = zeros(strandsperpacketmessage*messbytesperstrand, dtype=uint8) # 1d Array [223*27]*8bits
     for i in range(strandsperpacket):
         packet[i, 0] = packno # note assumes value 2 for strandIDbytes
         packet[i, 1] = i
@@ -120,24 +121,25 @@ def createmesspacket(packno) : # packno in range 0..255 with value 2 for strandI
     return packet, plaintext
 
 def protectmesspacket(packetin):  # fills in the RS check strands
-    packet = packetin.copy()
-    regin = zeros(strandsperpacket, dtype=uint8)
+    packet = packetin.copy() # 2d Array [255][31]*8bits
+    regin = zeros(strandsperpacket, dtype=uint8) # 1d Array [255]*8bits
     for j in range(messbytesperstrand):
         for i in range(strandsperpacket):
-            regin[i] = packet[i, ((j+i) % messbytesperstrand)+strandIDbytes]
+            regin[i] = packet[i, ((j+i) % messbytesperstrand)+strandIDbytes] # move across columns diagonally (parity bits for R-S)
         regout = RS.rsencode(regin)
         for i in range(strandsperpacket):
             packet[i, ((j+i) % messbytesperstrand)+strandIDbytes] = regout[i]
     return packet
+    # R-S fills the parity bits in the lowest 32 rows diagonally, and now we have a ready [255][31]*8bit packet of data + parity bits
 
 # functions to encode a packet to DNA strands, and decode DNA strands to a packet
 def messtodna(mpacket):
     # HEDGES encode a message packet into strands of DNA
     filler = array([0, 2, 1, 3, 0, 3, 2, 1, 2, 0, 3, 1, 3, 1, 2, 0, 2, 3, 1, 0, 3, 2, 1, 0, 1, 3], dtype=uint8)
-    dpacket = zeros([strandsperpacket, totstrandlen], dtype=uint8)
+    dpacket = zeros([strandsperpacket, totstrandlen], dtype=uint8) # 2d Array [255][300]*8bits but this will represent A/C/T/G in each place (we use 2 bits only)
     for i in range(strandsperpacket):
-        dna = code.encode(mpacket[i, :])
-        if len(dna) < totstrandlen: # need filler after message and before right primer
+        dna = code.encode(mpacket[i, :]) # for each strand, we do inner encode (HEDGES)
+        if len(dna) < totstrandlen: # need filler after message and before right primer, len of DNA 294 (default code rate 0.5)
             dnaleft = dna[:-rightlen]
             dnaright = dna[-rightlen:]
             dna = concatenate((dnaleft, filler[:totstrandlen-len(dna)],dnaright))
@@ -149,16 +151,16 @@ def dnatomess(dnapacket):
     # HEDGES decode strands of DNA (assumed ordered by packet and ID number) to a packet
     baddecodes = 0
     erasures = 0
-    mpacket = zeros([strandsperpacket, bytesperstrand], dtype=uint8)
+    mpacket = zeros([strandsperpacket, bytesperstrand], dtype=uint8) # now we want to decode, so we return to [255][31]
     epacket = ones([strandsperpacket, bytesperstrand], dtype=uint8)  # everything starts as an erasure
     for i in range(strandsperpacket):
-        (errcode, mess, _, _, _, _) = code.decode(dnapacket[i, :], 8*bytesperstrand)
+        (errcode, mess, _, _, _, _) = code.decode(dnapacket[i, :], 8*bytesperstrand) # here we give the length of the actual data, without primers and fillers
         if errcode > 0:
             baddecodes += 1
             erasures += max(0,messbytesperstrand-len(mess))
-        lenmin = min(len(mess),bytesperstrand)
+        lenmin = min(len(mess),bytesperstrand) # number of minimum erasures that have happened in this strand
         mpacket[i, :lenmin] = mess[:lenmin]
-        epacket[i, :lenmin] = 0
+        epacket[i, :lenmin] = 0 # here we assume that the deleted bytes are in the end of the strand
     return mpacket, epacket, baddecodes, erasures
 
 # functions to R-S correct a packet and extract its payload to an array of bytes
@@ -199,12 +201,43 @@ def extractplaintext(cpacket):
 def createerrors(dnabag,srate,drate,irate) :
     # for testing: create errors in a bag of strands
     (nrows,ncols) = dnabag.shape
-    newbag = zeros([nrows, ncols],dtype=uint8)
+    newbag = zeros([nrows, ncols], dtype=uint8)
     for i in range(nrows):
         dna = code.createerrors(dnabag[i, :], srate, drate, irate)
         lenmin = min(len(dna), ncols)
         newbag[i, :lenmin] = dna[:lenmin]
     return newbag
+
+def most_frequent(List):
+    counter = 0
+    num = List[0]
+    idx = 0
+    for i, item in enumerate(List):
+        curr_frequency = List.count(i)
+        if(curr_frequency> counter):
+            counter = curr_frequency
+            num = item
+            idx = i
+
+    return num, idx
+
+def calculate_optimal_packet(dpackets, epackets):
+    optimal_d_packet = []
+    optimal_e_packet = []
+    for i in range(len(dpackets[0])):
+        optimal_mini_d_packet = [None] * len(dpackets[0][0])
+        optimal_mini_e_packet = [None] * len(epackets[0][0])
+        for j in range(len(dpackets[0][0])):
+            bytes_to_compare = [dpackets[index][i][j] for index in range(readsNumber)]
+            optimal_mini_d_packet[j], idx = most_frequent(bytes_to_compare)
+            optimal_mini_e_packet[j] = epackets[idx][i][j]
+        optimal_d_packet.append(optimal_mini_d_packet.copy())
+        optimal_e_packet.append(optimal_mini_e_packet.copy())
+    optimal_d_packet = numpy.array(optimal_d_packet)
+    optimal_e_packet = numpy.array(optimal_e_packet)
+    return optimal_d_packet, optimal_e_packet
+
+
 
 if outputPathOption == 1:
     sys.stdout = open(outputPathCandidate, "w")
@@ -220,10 +253,10 @@ print("------------------------------------------")
 print("for each packet, these statistics are shown in two groups:")
 print("Packet number: (1.1, 1.2, 1.3, 1.4) (2.1, 2.2, 2.3, 2.4) packet OK/NOT")
 print("------------------------------------------")
-print("1.1 HEDGES decode failures")
-print("1.2 HEDGES bytes thus declared as erasures")
-print("1.3 R-S total errors detected in packet")
-print("1.4 max errors detected in a single decode")
+# print("1.1 HEDGES decode failures")
+# print("1.2 HEDGES bytes thus declared as erasures")
+print("1.1 R-S total errors detected in packet")
+print("1.2 max errors detected in a single decode")
 print("------------------------------------------")
 print("2.1 R-S reported as initially-uncorrected-but-recoverable total")
 print("2.2 same, but max in single decode")
@@ -244,7 +277,9 @@ file = open(LogsPath + "/" + currentTime + ".txt",'a')
 
 file.write('HEDGES error-correcting code for DNA storage corrects indels and allows sequence constraints\n')
 numpy.set_printoptions(threshold=sys.maxsize)
-for ipacket in range(npackets) :
+# perrors = [0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15] incase the user wants to run on all perrors for testing
+
+for ipacket in range(npackets):
     file.write('--------------------------------------------------------------------------------------------\n')
     file.write("Packet number: %d \n" % ipacket)
     file.write("--------------------\n")
@@ -268,22 +303,37 @@ for ipacket in range(npackets) :
     file.write("--------------------\n")
     file.writelines(str(dnapack)+ "\n")
     file.write("--------------------\n")
-    # simulate errors in DNA synthesis and sequencing
-    obspack = createerrors(dnapack, srate, drate, irate)
 
-    # decode
-    (dpacket, epacket, baddecodes, erasures) = dnatomess(obspack) # decode the strands
-    (cpacket, tot_detect, tot_uncorrect, max_detect, max_uncorrect, toterrcodes) = correctmesspacket(dpacket, epacket)
-    
+    dnapacks = [dnapack.copy() for i in range(readsNumber)]
+    obspacks = [None]*readsNumber
+    dpackets = [None]*readsNumber
+    epackets = [None]*readsNumber
+    baddecodes = [None]*readsNumber
+    erasures = [None]*readsNumber
+    print(("Packet %3d: " % (ipacket)), end=' ')
+    for i in range(readsNumber):
+        # simulate errors in DNA synthesis and sequencing
+        obspacks[i] = createerrors(dnapacks[i], srate, drate, irate)
+        # decode
+        (dpackets[i], epackets[i], baddecodes[i], erasures[i]) = dnatomess(obspacks[i]) # decode the strands
+        print(("read %3d: (baddecodes: %3d erasures: %3d)" % (i, baddecodes[i], erasures[i])), end=' ')
+
+    # now we have to compare between the different decodes of the different reads and take the majority of values
+    optimal_d_packet, optimal_e_packet = calculate_optimal_packet(dpackets, epackets)
+
+    (cpacket, tot_detect, tot_uncorrect, max_detect, max_uncorrect, toterrcodes) = correctmesspacket(optimal_d_packet, optimal_e_packet)
+
     # check against ground truth
     messcheck = extractplaintext(cpacket)
     badbytes = count_nonzero(messplain-messcheck)
-    
-    # print summary line
-    Totalbads += array([baddecodes, erasures, tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes])
-    print(("%3d: (%3d %3d %3d %3d) (%3d %3d %3d %3d)" % (ipacket, baddecodes, erasures,
-        tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes)), end=' ')
+
+    Totalbads += array(
+        [baddecodes[i], erasures[i], tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes,
+         badbytes])
+
+    print(("(%3d %3d) (%3d %3d %3d %3d)" % (tot_detect, max_detect, tot_uncorrect, max_uncorrect, toterrcodes, badbytes)), end=' ')
     print("packet OK" if badbytes == 0 else "packet NOT ok")
-    if badbytes: badpackets += 1
+    if badbytes:
+        badpackets += 1
 print("all packets OK" if not badpackets else "some packets had errors!")
 print("TOT: (%4d %4d %4d %4d) (%4d %4d %4d %4d)" % tuple(Totalbads))
